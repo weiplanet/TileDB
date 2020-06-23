@@ -796,3 +796,31 @@ configure_file(
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/tiledb.pc
         DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+#-----------------------------------------------------------------------------
+# Generate cpp with git commit hash
+find_package(Git)
+if(Git_FOUND)
+  set(TILEDB_GITVER_FILE "${CMAKE_CURRENT_BINARY_DIR}/tiledb_git_sha.h")
+  set(TILEDB_GITVER_TEMP "${CMAKE_CURRENT_BINARY_DIR}/tiledb_git_sha.tmp")
+
+  # always run this target to check for changes.
+  add_custom_target(_GEN_GITVER ALL
+    # write git hash to temp file
+    COMMAND ${CMAKE_COMMAND} -E echo         "#define _tiledb_xstr(s) #s"             > "${TILEDB_GITVER_TEMP}"
+    COMMAND ${CMAKE_COMMAND} -E echo         "#define _tiledb_str(s) _tiledb_xstr(s)" >> "${TILEDB_GITVER_TEMP}"
+    COMMAND ${CMAKE_COMMAND} -E echo_append  "#define TILEDB_GIT_HASH "               >> "${TILEDB_GITVER_TEMP}"
+    COMMAND                                  ${GIT_EXECUTABLE} rev-parse HEAD         >> "${TILEDB_GITVER_TEMP}"
+
+    # overwrite real file *only if different*
+    # to avoid unnecessary recompilation
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${TILEDB_GITVER_TEMP}" "${TILEDB_GITVER_FILE}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating TILEDB_GIT_HASH"
+    VERBATIM
+    )
+
+  add_custom_command(OUTPUT ${TILEDB_GITVER_FILE}
+                     DEPENDS _GEN_GITVER)
+endif()
