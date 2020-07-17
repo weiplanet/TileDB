@@ -44,7 +44,7 @@ setup_venv() {
   fi
   source "${venv_dir}/bin/activate" || die "could not activate virtualenv"
   pip install 'Sphinx==1.6.7' \
-       'breathe==4.7.3' \
+       'breathe>=4.14.1' \
        'sphinxcontrib-contentui==0.2.2' \
        'sphinx_rtd_theme==0.3.0' || die "could not install doc dependencies"
 }
